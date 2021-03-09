@@ -151,4 +151,4 @@ It is quite easy to add `Cache-Control` header value in Lambda@Edge and every re
 Last but not least, we need to deploy our solution with `sls deploy` in the root folder.
 
 ## Reference
-[serverless-lambda-edge-pre-existing-cloudfront]https://github.com/serverless-operations/serverless-lambda-edge-pre-existing-cloudfront
+[serverless-lambda-edge-pre-existing-cloudfront](https://github.com/serverless-operations/serverless-lambda-edge-pre-existing-cloudfront)
