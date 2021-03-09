@@ -25,6 +25,7 @@ service: lambdaedge-cicd-project
 
 frameworkVersion: '2'
 
+# AWS provider
 provider:
   name: aws
   runtime: python3.8
@@ -37,23 +38,14 @@ provider:
         - lambdaEdgeRole
         - Arn
 
+# exclude or include local folders of files for deployment
 package:
   exclude:
     - node_modules/**
     - package-lock.json
 
+# lambda function details, for lambda@edge, we could setup 4 functions to include `viewer-request`, `origin-request`, `origin-response` or `viewer-response`
 functions:
-  # viewerRequest:
-  #   handler: lambdaEdge/handler
-  #   events:
-  #     - preExistingCloudFront:
-  #       # ---- Mandatory Properties -----
-  #         distributionId: E3BKY5OQ26MZ4W # CloudFront distribution ID you want to associate
-  #         eventType: origin-response # Choose event to trigger your Lambda function, which are `viewer-request`, `origin-request`, `origin-response` or `viewer-response`
-  #         pathPattern: '*.png' # Specifying the CloudFront behavior
-  #         includeBody: false # Whether including body or not within request
-  #       # ---- Optional Property -----
-  #         #stage: dev # Specify the stage at which you want this CloudFront distribution to be updated
   originResponse:
     handler: lambdaEdge/originResponse.handler
     events:
@@ -61,11 +53,10 @@ functions:
         # ---- Mandatory Properties -----
           distributionId: E3BKY5OQ26MZ4W # CloudFront distribution ID you want to associate
           eventType: origin-response # Choose event to trigger your Lambda function, which are `viewer-request`, `origin-request`, `origin-response` or `viewer-response`
-          pathPattern: '*.png' # Specifying the CloudFront behavior
+          pathPattern: '*.pg' # Specifying the CloudFront behavior
           includeBody: false # Whether including body or not within request
-        # ---- Optional Property -----
-          #stage: dev # Specify the stage at which you want this CloudFront distribution to be updated
-
+        
+# IAM Role and policy statement
 resources:
   Resources:
     lambdaEdgeRole:
@@ -101,10 +92,12 @@ resources:
                       -
                         - 'arn:aws:logs:*:*:*'
 
+# plugins to ease development
 plugins:
   - serverless-lambda-edge-pre-existing-cloudfront
   - serverless-python-requirements
 
+# create a docker environment for lambda package
 custom:
   pythonRequirements:
     dockerizePip: non-linux
