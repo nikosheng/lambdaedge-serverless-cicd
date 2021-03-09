@@ -1,0 +1,133 @@
+# Welcome to Serverless!
+#
+# This file is the main config file for your service.
+# It's very minimal at this point and uses default values.
+# You can always add more config options for more control.
+# We've included some commented out config examples here.
+# Just uncomment any of them to get that config option.
+#
+# For full config options, check the docs:
+#    docs.serverless.com
+#
+# Happy Coding!
+
+service: lambdaedge-cicd-project
+# app and org for use with dashboard.serverless.com
+#app: your-app-name
+#org: your-org-name
+
+# You can pin your service to only deploy with a specific Serverless version
+# Check out our docs for more details
+frameworkVersion: '2'
+
+provider:
+  name: aws
+  runtime: python3.8
+  lambdaHashingVersion: 20201221
+
+# you can overwrite defaults here
+  #stage: dev
+  region: us-east-1
+
+# you can add statements to the Lambda function's IAM Role here
+  role: 
+    Fn::GetAtt:
+        - lambdaEdgeRole
+        - Arn
+
+# you can define service wide environment variables here
+#  environment:
+#    variable1: value1
+
+# you can add packaging information here
+#package:
+#  include:
+#    - include-me.py
+#    - include-me-dir/**
+#  exclude:
+#    - exclude-me.py
+#    - exclude-me-dir/**
+
+package:
+  exclude:
+    - node_modules/**
+    - package-lock.json
+
+functions:
+  # viewerRequest:
+  #   handler: lambdaEdge/handler
+  #   events:
+  #     - preExistingCloudFront:
+  #       # ---- Mandatory Properties -----
+  #         distributionId: E3BKY5OQ26MZ4W # CloudFront distribution ID you want to associate
+  #         eventType: origin-response # Choose event to trigger your Lambda function, which are `viewer-request`, `origin-request`, `origin-response` or `viewer-response`
+  #         pathPattern: '*.png' # Specifying the CloudFront behavior
+  #         includeBody: false # Whether including body or not within request
+  #       # ---- Optional Property -----
+  #         #stage: dev # Specify the stage at which you want this CloudFront distribution to be updated
+  originResponse:
+    handler: lambdaEdge/originResponse.handler
+    events:
+      - preExistingCloudFront:
+        # ---- Mandatory Properties -----
+          distributionId: E3BKY5OQ26MZ4W # CloudFront distribution ID you want to associate
+          eventType: origin-response # Choose event to trigger your Lambda function, which are `viewer-request`, `origin-request`, `origin-response` or `viewer-response`
+          pathPattern: '*.png' # Specifying the CloudFront behavior
+          includeBody: false # Whether including body or not within request
+        # ---- Optional Property -----
+          #stage: dev # Specify the stage at which you want this CloudFront distribution to be updated
+
+resources:
+  Resources:
+    lambdaEdgeRole:
+      Type: AWS::IAM::Role
+      Properties:
+        Path: /
+        RoleName: lambdaEdgeRole # required if you want to use 'serverless deploy --function' later on
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service:
+                  - lambda.amazonaws.com
+                  - edgelambda.amazonaws.com
+              Action: sts:AssumeRole
+        # note that these rights are needed if you want your function to be able to communicate with resources within your vpc
+        ManagedPolicyArns:
+          - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+        Policies:
+          - PolicyName: serverless-framework-lambda-edge-policy
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                - Effect: Allow # note that these rights are given in the default policy and are required if you want logs out of your lambda(s)
+                  Action:
+                    - logs:CreateLogGroup
+                    - logs:CreateLogStream
+                    - logs:PutLogEvents
+                  Resource:
+                    - 'Fn::Join':
+                      - ':'
+                      -
+                        - 'arn:aws:logs:*:*:*'
+
+plugins:
+  - serverless-lambda-edge-pre-existing-cloudfront
+  - serverless-python-requirements
+
+custom:
+  pythonRequirements:
+    dockerizePip: non-linux
+
+# you can add CloudFormation resource templates here
+#resources:
+#  Resources:
+#    NewResource:
+#      Type: AWS::S3::Bucket
+#      Properties:
+#        BucketName: my-new-bucket
+#  Outputs:
+#     NewOutput:
+#       Description: "Description for the output"
+#       Value: "Some output value"
